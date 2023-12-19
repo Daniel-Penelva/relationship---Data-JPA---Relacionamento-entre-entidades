@@ -14,7 +14,9 @@ import com.datajpa.relationship.dto.responseDto.BookResponseDto;
 import com.datajpa.relationship.model.Author;
 import com.datajpa.relationship.model.Book;
 import com.datajpa.relationship.model.Category;
+import com.datajpa.relationship.repository.AuthorRepository;
 import com.datajpa.relationship.repository.BookRepository;
+import com.datajpa.relationship.repository.CategoryRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -22,22 +24,27 @@ import jakarta.transaction.Transactional;
 public class BookServiceImpl implements BookService{
 
     private final BookRepository bookRepository;
+    private final AuthorRepository authorRepository;
+    private final CategoryRepository categoryRepository;
     private final AuthorService authorService;
     private final CategoryService categoryService;
 
-    public BookServiceImpl(BookRepository bookRepository, AuthorService authorService, CategoryService categoryService) {
+    public BookServiceImpl(BookRepository bookRepository, AuthorService authorService, CategoryService categoryService, AuthorRepository authorRepository, CategoryRepository categoryRepository) {
         this.bookRepository = bookRepository;
         this.authorService = authorService;
         this.categoryService = categoryService;
+        this.authorRepository = authorRepository;
+        this.categoryRepository = categoryRepository;
     }
 
-    // (Criar livro)
+    // create book (Criar livro)
     @Transactional
     @Override
     public BookResponseDto addBook(BookRequestDto bookRequestDto) {
         
         Book book = new Book();
         book.setName(bookRequestDto.getName());
+
         if (bookRequestDto.getAuthorIds().isEmpty()) {
             throw new IllegalArgumentException("you need atleast on author");
 
@@ -64,7 +71,7 @@ public class BookServiceImpl implements BookService{
     }
 
 
-    // (buscar livro por id)
+    // Search book by id (buscar livro por id)
     @Override
     public BookResponseDto getBookById(Long bookId) {
         Book book = getBook(bookId);
@@ -83,7 +90,7 @@ public class BookServiceImpl implements BookService{
     }
 
 
-    // (listar todos os livros)
+    // List all books (listar todos os livros)
     @Override
     public List<BookResponseDto> getBooks() {
        
@@ -95,7 +102,7 @@ public class BookServiceImpl implements BookService{
     }
 
 
-    // (deletar livro por id)
+    // Delete book by id (deletar livro por id)
     @Override
     public BookResponseDto deleteBook(Long bookId) {
         
@@ -106,7 +113,7 @@ public class BookServiceImpl implements BookService{
     }
 
 
-    // (editar livro por id)
+    // Edit book by id (editar livro por id)
     @Override
     public BookResponseDto editBook(Long bookId, BookRequestDto bookRequestDto) {
         
@@ -129,11 +136,13 @@ public class BookServiceImpl implements BookService{
             Category category = categoryService.getCategory(bookRequestDto.getCategoryId());
             bookToEdit.setCategory(category);
         }
+
+        bookRepository.save(bookToEdit);
         return mapper.bookToBookResponseDto(bookToEdit);
     }
 
     
-    // (adicionar autor ao livro)
+    // add Author To Book (adicionar autor ao livro)
     @Override
     public BookResponseDto addAuthorToBook(Long bookId, Long authorId) {
         
@@ -151,7 +160,7 @@ public class BookServiceImpl implements BookService{
     }
 
 
-    // (excluir autor do livro)
+    // delete Author From Book - (excluir autor do livro)
     @Override
     public BookResponseDto deleteAuthorFromBook(Long bookId, Long authorId) {
         
@@ -162,20 +171,25 @@ public class BookServiceImpl implements BookService{
             throw new IllegalArgumentException("book does not have this author");
         }
         
-        author.deleteBook(book);
-        book.deleteAuthor(author);
+        author.deleteBook(book); // Remove o livro da lista de livros do autor
+        book.deleteAuthor(author); // Remove o autor da lista de autores do livro
+
+        // Atualiza as entidades no banco de dados
+        authorRepository.save(author);
+        bookRepository.save(book);
+
         return mapper.bookToBookResponseDto(book);
     }
 
     
-    // (adicionar categoria ao livro)
+    // add Category To Book - (adicionar categoria ao livro)
     @Override
     public BookResponseDto addCategoryToBook(Long bookId, Long categoryId) {
         
         Book book = getBook(bookId);
         Category category = categoryService.getCategory(categoryId);
         
-        if (Objects.nonNull(book.getCategory())){
+        if (book == null && category == null){
             throw new IllegalArgumentException("book already has a catogory");
         }
        
@@ -186,7 +200,7 @@ public class BookServiceImpl implements BookService{
     }
     
 
-    // (remover categoria do livro)
+    // remove Category From Book (remover categoria do livro)
     @Override
     public BookResponseDto removeCategoryFromBook(Long bookId, Long categoryId) {
         
@@ -196,11 +210,14 @@ public class BookServiceImpl implements BookService{
         if (!(Objects.nonNull(book.getCategory()))){
             throw new IllegalArgumentException("book does not have a category to delete");
         }
-        
+
         book.setCategory(null);
-        category.deleteBook(book);
+        category.deleteBook(book); // Remove o livro da lista de livros da categoria
+
+        bookRepository.save(book);
+        categoryRepository.save(category);
         
-        return mapper.bookToBookResponseDto(book);
+        return mapper.bookToBookResponseDto(book);  
     }
     
 }

@@ -1,7 +1,6 @@
 package com.datajpa.relationship.service;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -34,7 +33,7 @@ public class AuthorServiceImpl implements AuthorService {
 
         Author author = new Author();
         author.setName(authorRequestDto.getName());
-
+        
         if (authorRequestDto.getZipcodeId() == null) {
             throw new IllegalArgumentException("author nedd a zipcode");
         }
@@ -61,9 +60,9 @@ public class AuthorServiceImpl implements AuthorService {
 
     // Search author by id (Buscar autor por id)
     @Override
-    public AuthorResponseDto getAuthorById(Long authorId) {
+    public AuthorResponseDto getAuthorById(Long authorId) { 
 
-        return mapper.authorToAuthorResponseDto(getAuthor(authorId));
+        return mapper.authorToAuthorResponseDto(getAuthor(authorId)); // chama o método getAuthor com o id do autor e lança para o método authorToAuthorResponseDto com o id dele.
     }
 
 
@@ -84,7 +83,6 @@ public class AuthorServiceImpl implements AuthorService {
         
         Author author = getAuthor(authorId);
         authorRepository.delete(author);
-        
         return mapper.authorToAuthorResponseDto(author);
     }
 
@@ -112,7 +110,7 @@ public class AuthorServiceImpl implements AuthorService {
         Author author = getAuthor(authorId);
         Zipcode zipcode = zipcodeService.getZipcode(zipcodeId);
 
-        if (Objects.nonNull(author.getZipcode())) {
+        if (author.getZipcode() == null) {
             throw new RuntimeException("author already has a zipcode");
         }
 

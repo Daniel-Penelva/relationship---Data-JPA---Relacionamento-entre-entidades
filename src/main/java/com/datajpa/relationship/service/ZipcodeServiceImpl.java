@@ -5,7 +5,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.datajpa.relationship.dto.requestDto.ZipcodeRequestDto;
@@ -75,7 +74,7 @@ public class ZipcodeServiceImpl implements ZipcodeService {
         Zipcode zipcodeToEdit = getZipcode(zipcodeId);
         zipcodeToEdit.setName(zipcodeRequestDto.getName());
 
-        if (zipcodeRequestDto.getCityId() != null) {
+        if (zipcodeRequestDto.getCityId() == null) { // verifica se o id da cidade está nulo
             return zipcodeToEdit;
         }
 
@@ -106,7 +105,7 @@ public class ZipcodeServiceImpl implements ZipcodeService {
 
         Zipcode zipcode = getZipcode(zipcodeId);
 
-        if (Objects.nonNull(zipcode.getCity())) {
+        if (zipcode.getCity() == null) {
             throw new IllegalArgumentException("zipcode does not have a city");
         }
 

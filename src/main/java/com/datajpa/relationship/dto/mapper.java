@@ -19,6 +19,7 @@ public class mapper {
         BookResponseDto bookResponseDto = new BookResponseDto();
 
         bookResponseDto.setId(book.getId());
+        bookResponseDto.setName(book.getName());
         bookResponseDto.setCategoryName(book.getCategory().getName());
 
         List<String> names = new ArrayList<>();
